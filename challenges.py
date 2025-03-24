@@ -40,7 +40,8 @@ def display_challenge_card(idx, challenge):
         st.markdown(f"**Description:** {challenge['description']}")
         
         if 'hint' in challenge and not solved:
-            with st.expander("Show Hint"):
+            # Use a collapsible container with button instead of nested expander
+            if st.button(f"Show Hint", key=f"hint_{challenge_id}"):
                 st.markdown(f"*{challenge['hint']}*")
         
         # Display any challenge-specific content
