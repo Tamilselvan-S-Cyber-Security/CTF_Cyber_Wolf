@@ -59,15 +59,14 @@ def authenticate_user(auth):
             else:
                 st.error("Email and password are required.")
     
-    # Option to login with Google
-    st.markdown("#### Or login with")
-    if st.button("Google Login"):
-        st.info("Redirecting to Google login...")
-        # In a real implementation, this would redirect to Google OAuth
+    # Add a direct login option for demo purposes
+    st.markdown("---")
+    st.markdown("#### Demo Login")
+    if st.button("Login as Demo User"):
         # For simplicity, we'll simulate a successful login
         st.session_state.authenticated = True
         st.session_state.user_info = {
-            'uid': 'google_user_123',
+            'uid': 'demo_user_123',
             'email': 'demo@example.com',
             'name': 'Demo User'
         }
@@ -76,7 +75,7 @@ def authenticate_user(auth):
         if 'solved_challenges' not in st.session_state:
             st.session_state.solved_challenges = {}
         
-        st.success("Login successful!")
+        st.success("Demo login successful!")
         time.sleep(1)
         st.rerun()
 
