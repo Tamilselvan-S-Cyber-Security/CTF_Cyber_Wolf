@@ -32,25 +32,22 @@ def get_user_progress():
     """Get statistics about user's progress."""
     if 'solved_challenges' not in st.session_state:
         return {
-            'total_solved': 0,
-            'easy_solved': 0,
-            'medium_solved': 0,
+            'solved': 0,
+            'attempted': 0,
             'total_score': 0
         }
     
-    # Count challenges by category
-    easy_solved = 0
-    medium_solved = 0
+    # Count solved challenges
+    solved = len(st.session_state.solved_challenges)
     
-    for challenge_id in st.session_state.solved_challenges:
-        if challenge_id.startswith('easy'):
-            easy_solved += 1
-        elif challenge_id.startswith('medium'):
-            medium_solved += 1
+    # Count attempted challenges (including solved ones)
+    attempted = 0
+    for key in st.session_state:
+        if key.startswith('attempt_'):
+            attempted += 1
     
     return {
-        'total_solved': len(st.session_state.solved_challenges),
-        'easy_solved': easy_solved,
-        'medium_solved': medium_solved,
+        'solved': solved,
+        'attempted': attempted,
         'total_score': calculate_score()
     }

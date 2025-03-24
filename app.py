@@ -72,6 +72,26 @@ def main():
             # Display timer for current category
             if st.session_state.active_category:
                 display_timer()
+                
+                # Display challenge progress
+                progress = get_user_progress()
+                if st.session_state.active_category == "easy":
+                    total_challenges = len(easy_challenges)
+                else:
+                    total_challenges = len(medium_challenges)
+                    
+                st.write("---")
+                st.markdown("### Progress")
+                solved = progress['solved']
+                attempted = progress['attempted']
+                
+                # Show progress metrics
+                st.write(f"✅ Solved: {solved}/{total_challenges}")
+                st.write(f"⚠️ Attempted: {attempted}")
+                st.write(f"🔄 Remaining: {total_challenges - attempted}")
+                
+                # Progress bar
+                st.progress(solved/total_challenges if total_challenges > 0 else 0)
             
             # Logout button
             if st.button("Logout", key="logout"):
@@ -115,24 +135,32 @@ def main():
         # Display challenges for the selected category
         elif st.session_state.active_category == "easy":
             # Check if timer expired
-            if check_timer_expired():
-                st.error("Time's up! Your session has ended.")
+            if auto_close_challenges():
+                st.error("⏰ Time's up! Your session has ended.")
+                st.warning(f"Final Score: {calculate_score()} points")
+                
                 if st.button("Return to Categories"):
                     st.session_state.active_category = None
+                    st.session_state.timer_end = None
                     st.rerun()
             else:
                 st.markdown("## Easy Challenges")
+                st.info("⏱️ You have 1 hour to solve these challenges. Timer started when you selected this category.")
                 display_challenges(easy_challenges)
         
         elif st.session_state.active_category == "medium":
             # Check if timer expired
-            if check_timer_expired():
-                st.error("Time's up! Your session has ended.")
+            if auto_close_challenges():
+                st.error("⏰ Time's up! Your session has ended.")
+                st.warning(f"Final Score: {calculate_score()} points")
+                
                 if st.button("Return to Categories"):
                     st.session_state.active_category = None
+                    st.session_state.timer_end = None
                     st.rerun()
             else:
                 st.markdown("## Medium Challenges")
+                st.info("⏱️ You have 1 hour and 40 minutes to solve these challenges. Timer started when you selected this category.")
                 display_challenges(medium_challenges)
         
         # Display leaderboard (if time permits)
