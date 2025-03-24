@@ -10,6 +10,33 @@ def initialize_timer(category, minutes):
     st.session_state.timer_end = end_time.timestamp()
     st.session_state.timer_category = category
     st.session_state.timer_total_minutes = minutes
+    st.session_state.timer_start_time = current_time.timestamp()
+    
+    # Initialize start time for each challenge to track solving time
+    st.session_state.challenge_start_times = {}
+
+def start_challenge_timer(challenge_id):
+    """Start a timer for a specific challenge."""
+    if 'challenge_start_times' not in st.session_state:
+        st.session_state.challenge_start_times = {}
+    
+    # Only set start time if it doesn't exist yet
+    if challenge_id not in st.session_state.challenge_start_times:
+        st.session_state.challenge_start_times[challenge_id] = time.time()
+
+def get_challenge_solving_time(challenge_id):
+    """Get the time spent solving a challenge in seconds."""
+    if 'challenge_start_times' not in st.session_state or challenge_id not in st.session_state.challenge_start_times:
+        return 0
+    
+    start_time = st.session_state.challenge_start_times[challenge_id]
+    return time.time() - start_time
+
+def format_solving_time(seconds):
+    """Format solving time in minutes and seconds."""
+    minutes = int(seconds // 60)
+    seconds = int(seconds % 60)
+    return f"{minutes}m {seconds}s"
 
 def get_remaining_time():
     """Get the remaining time in seconds."""
@@ -52,9 +79,17 @@ def display_timer():
     st.progress(progress)
     st.markdown(f"<h2 style='text-align: center;'>{formatted_time}</h2>", unsafe_allow_html=True)
     
+    # Show elapsed time
+    if 'timer_start_time' in st.session_state:
+        elapsed_seconds = time.time() - st.session_state.timer_start_time
+        elapsed_formatted = format_time(elapsed_seconds)
+        st.markdown(f"**Elapsed Time:** {elapsed_formatted}", unsafe_allow_html=True)
+    
     # Warning when time is running low
     if remaining_seconds < 300:  # Less than 5 minutes
         st.warning("⚠️ Less than 5 minutes remaining!")
+    elif remaining_seconds < 600:  # Less than 10 minutes
+        st.warning("⚠️ Less than 10 minutes remaining!")
 
 def check_timer_expired():
     """Check if the timer has expired."""
@@ -63,3 +98,12 @@ def check_timer_expired():
     
     current_time = datetime.now().timestamp()
     return current_time >= st.session_state.timer_end
+
+def auto_close_challenges():
+    """Auto-close challenges when time expires."""
+    if check_timer_expired():
+        if 'active_category' in st.session_state:
+            st.session_state.previous_category = st.session_state.active_category
+            st.session_state.active_category = None
+        return True
+    return False

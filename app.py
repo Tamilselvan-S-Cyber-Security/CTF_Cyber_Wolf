@@ -8,8 +8,8 @@ import json
 # Import local modules
 from auth import check_authentication, authenticate_user, logout_user
 from challenges import display_challenges, check_flag
-from timer import display_timer, initialize_timer, check_timer_expired
-from utils import initialize_session_state, calculate_score
+from timer import display_timer, initialize_timer, check_timer_expired, auto_close_challenges
+from utils import initialize_session_state, calculate_score, get_user_progress
 from styles import apply_styles
 from data.easy_challenges import easy_challenges
 from data.medium_challenges import medium_challenges

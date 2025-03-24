@@ -1,9 +1,16 @@
 import streamlit as st
 import time
 import hashlib
+from timer import start_challenge_timer, get_challenge_solving_time, format_solving_time, auto_close_challenges
 
 def display_challenges(challenges):
     """Display all challenges for a specific category."""
+    # Check if timer has expired and auto-close if needed
+    if auto_close_challenges():
+        st.error("⏰ Time's up! The challenges are now closed.")
+        st.warning("Your final score has been recorded.")
+        return
+    
     # Create tabs for different challenge types
     tabs = st.tabs(["Web", "Crypto", "Forensics", "Reversing", "Misc"])
     
@@ -32,6 +39,10 @@ def display_challenge_card(idx, challenge):
     # Check if challenge has been solved
     solved = challenge_id in st.session_state.solved_challenges
     
+    # Start timing this challenge when it's opened and not solved
+    if not solved:
+        start_challenge_timer(challenge_id)
+    
     # Create the challenge card
     with st.expander(
         f"{challenge['title']} ({challenge['points']} pts) " + ("✅" if solved else ""),
@@ -58,12 +69,21 @@ def display_challenge_card(idx, challenge):
                     if check_flag(challenge_id, flag_input, challenge['flag']):
                         st.success("Correct flag! 🎉")
                         
-                        # Save the solved challenge to session state
+                        # Calculate solving time
+                        solving_time = get_challenge_solving_time(challenge_id)
+                        solving_time_formatted = format_solving_time(solving_time)
+                        
+                        # Save the solved challenge to session state with timing information
                         st.session_state.solved_challenges[challenge_id] = {
                             'title': challenge['title'],
                             'points': challenge['points'],
-                            'time': time.time()
+                            'time': time.time(),
+                            'solving_time': solving_time,
+                            'solving_time_formatted': solving_time_formatted
                         }
+                        
+                        # Show solving time
+                        st.info(f"Solved in: {solving_time_formatted}")
                         
                         # Wait briefly to show the success message
                         time.sleep(1)
@@ -71,7 +91,10 @@ def display_challenge_card(idx, challenge):
                     else:
                         st.error("Incorrect flag. Try again!")
         else:
+            solved_info = st.session_state.solved_challenges[challenge_id]
+            solving_time_display = solved_info.get('solving_time_formatted', 'N/A')
             st.success(f"You've solved this challenge! (+{challenge['points']} points)")
+            st.info(f"Solved in: {solving_time_display}")
 
 def check_flag(challenge_id, submitted_flag, correct_flag):
     """Check if the submitted flag is correct."""
