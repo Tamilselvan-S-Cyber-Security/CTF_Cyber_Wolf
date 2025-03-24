@@ -13,6 +13,7 @@ from utils import initialize_session_state, calculate_score, get_user_progress
 from styles import apply_styles
 from data.easy_challenges import easy_challenges
 from data.medium_challenges import medium_challenges
+from admin import admin_panel, is_admin
 
 # Page configuration
 st.set_page_config(
@@ -70,7 +71,7 @@ def main():
             st.metric("Total Score", f"{total_score} pts")
             
             # Display timer for current category
-            if st.session_state.active_category:
+            if st.session_state.active_category and st.session_state.active_category not in ["admin"]:
                 display_timer()
                 
                 # Display challenge progress
@@ -92,6 +93,21 @@ def main():
                 
                 # Progress bar
                 st.progress(solved/total_challenges if total_challenges > 0 else 0)
+            
+            # Navigation options
+            st.write("---")
+            st.markdown("### Navigation")
+            
+            # Return to categories button (if in challenge mode)
+            if st.session_state.active_category and st.session_state.active_category not in ["admin"]:
+                if st.button("Return to Categories"):
+                    st.session_state.active_category = None
+                    st.rerun()
+            
+            # Admin panel button
+            if st.button("Admin Panel", key="admin_btn"):
+                st.session_state.active_category = "admin"
+                st.rerun()
             
             # Logout button
             if st.button("Logout", key="logout"):
@@ -162,6 +178,10 @@ def main():
             st.markdown("## Medium Challenges")
             st.info("⏱️ You have 1 hour and 40 minutes to solve these challenges. Timer started when you selected this category.")
             display_challenges(medium_challenges)
+    
+    # Admin panel
+    elif st.session_state.active_category == "admin":
+        admin_panel()
         
         # Display leaderboard (if time permits)
         # This would require a database integration, which is not implemented in this demo

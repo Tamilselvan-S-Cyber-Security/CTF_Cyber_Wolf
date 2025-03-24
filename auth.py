@@ -12,6 +12,8 @@ def initialize_auth_state():
         st.session_state.user_info = {}
     if 'auth_error' not in st.session_state:
         st.session_state.auth_error = None
+    if 'is_admin' not in st.session_state:
+        st.session_state.is_admin = False
 
 def check_authentication():
     """Check if the user is authenticated."""
@@ -56,10 +58,18 @@ def authenticate_user(auth):
                     
                     # Update session state - no history, fresh start every time
                     st.session_state.authenticated = True
+                    
+                    # Check if this is an admin login
+                    is_admin = False
+                    # Identify admin by special username and password
+                    if team_name.lower() == "admin" and password == "ctfadmin123":
+                        is_admin = True
+                        
                     st.session_state.user_info = {
                         'uid': team_name.lower().replace(' ', '_'),
                         'name': team_name,
-                        'team_id': ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
+                        'team_id': ''.join(random.choices(string.ascii_lowercase + string.digits, k=6)),
+                        'is_admin': is_admin
                     }
                     
                     # Initialize fresh challenge progress for this session
@@ -88,3 +98,13 @@ def logout_user():
     st.session_state.active_category = None
     if 'timer_end' in st.session_state:
         del st.session_state.timer_end
+        
+    # Reset admin state
+    if 'is_admin' in st.session_state:
+        st.session_state.is_admin = False
+    
+    # Reset any editing state for admin panel
+    if 'editing_challenge' in st.session_state:
+        del st.session_state.editing_challenge
+    if 'editing_category' in st.session_state:
+        del st.session_state.editing_category
