@@ -6,7 +6,7 @@ import pandas as pd
 import json
 
 # Import local modules
-from auth import logout_user  # We only need logout functionality
+from auth import authenticate_user, logout_user, check_authentication
 from challenges import display_challenges, check_flag
 from timer import display_timer, initialize_timer, check_timer_expired, auto_close_challenges
 from utils import initialize_session_state, calculate_score, get_user_progress
@@ -30,13 +30,13 @@ initialize_session_state()
 
 # Firebase configuration
 firebase_config = {
-    "apiKey": "AIzaSyBHvGu2v_2k7EXpCATDPjpNN3eTQFh6qRA",
-    "authDomain": "cyber-wolf-0jkuwe.firebaseapp.com",
-    "projectId": "cyber-wolf-0jkuwe",
-    "storageBucket": "cyber-wolf-0jkuwe.firebasestorage.app",
-    "messagingSenderId": "928367001088",
-    "appId": "1:928367001088:web:13c28470f09863292fe2e5",
-    "databaseURL": "https://cyber-wolf-0jkuwe-default-rtdb.firebaseio.com"
+    "apiKey": "AIzaSyAnEuHvLvf9o1d9G84kaz7EXO4SZYsq_qQ",
+    "authDomain": "ctf-gamming-tamilselvan.firebaseapp.com",
+    "projectId": "ctf-gamming-tamilselvan",
+    "storageBucket": "ctf-gamming-tamilselvan.firebasestorage.app",
+    "messagingSenderId": "348660714388",
+    "appId": "1:348660714388:web:e87e10da74d659522cdd81",
+    "databaseURL": "https://ctf-gamming-tamilselvan-default-rtdb.asia-southeast1.firebasedatabase.app"
 }
 
 # Initialize Firebase
@@ -57,55 +57,46 @@ def main():
             unsafe_allow_html=True
         )
 
-    # Auto-authenticate the user (no login required)
-    if not st.session_state.authenticated:
-        # Set authentication status directly
-        st.session_state.authenticated = True
-        st.session_state.user_info = {
-            'uid': 'player_123',
-            'name': 'Player'
-        }
-        
-        # Initialize user's challenge progress
-        if 'solved_challenges' not in st.session_state:
-            st.session_state.solved_challenges = {}
-    
-    # Display sidebar
-    with st.sidebar:
-        st.write(f"👋 Welcome, Player")
-        
-        # Display user score
-        total_score = calculate_score()
-        st.metric("Total Score", f"{total_score} pts")
-        
-        # Display timer for current category
-        if st.session_state.active_category:
-            display_timer()
+    # Check if user is authenticated
+    if not check_authentication():
+        authenticate_user(auth)
+    else:
+        # Display sidebar
+        with st.sidebar:
+            st.write(f"👋 Welcome, Team {st.session_state.user_info.get('name', 'Player')}")
             
-            # Display challenge progress
-            progress = get_user_progress()
-            if st.session_state.active_category == "easy":
-                total_challenges = len(easy_challenges)
-            else:
-                total_challenges = len(medium_challenges)
+            # Display user score
+            total_score = calculate_score()
+            st.metric("Total Score", f"{total_score} pts")
+            
+            # Display timer for current category
+            if st.session_state.active_category:
+                display_timer()
                 
-            st.write("---")
-            st.markdown("### Progress")
-            solved = progress['solved']
-            attempted = progress['attempted']
+                # Display challenge progress
+                progress = get_user_progress()
+                if st.session_state.active_category == "easy":
+                    total_challenges = len(easy_challenges)
+                else:
+                    total_challenges = len(medium_challenges)
+                    
+                st.write("---")
+                st.markdown("### Progress")
+                solved = progress['solved']
+                attempted = progress['attempted']
+                
+                # Show progress metrics
+                st.write(f"✅ Solved: {solved}/{total_challenges}")
+                st.write(f"⚠️ Attempted: {attempted}")
+                st.write(f"🔄 Remaining: {total_challenges - attempted}")
+                
+                # Progress bar
+                st.progress(solved/total_challenges if total_challenges > 0 else 0)
             
-            # Show progress metrics
-            st.write(f"✅ Solved: {solved}/{total_challenges}")
-            st.write(f"⚠️ Attempted: {attempted}")
-            st.write(f"🔄 Remaining: {total_challenges - attempted}")
-            
-            # Progress bar
-            st.progress(solved/total_challenges if total_challenges > 0 else 0)
-        
-        # Reset button instead of logout
-        if st.button("Reset Game", key="reset_game"):
-            logout_user()
-            st.rerun()
+            # Logout button
+            if st.button("Logout", key="logout"):
+                logout_user()
+                st.rerun()
     
     # Main content - Category selection
     if not st.session_state.active_category:
