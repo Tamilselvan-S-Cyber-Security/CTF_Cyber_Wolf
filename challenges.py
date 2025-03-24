@@ -11,30 +11,20 @@ def display_challenges(challenges):
         st.warning("Your final score has been recorded.")
         return
     
-    # Create tabs for different challenge types
-    tabs = st.tabs(["Web", "Crypto", "Forensics", "Reversing", "Misc"])
+    # Display challenges directly without tabs
+    st.write("### Available Challenges")
     
-    # Group challenges by type
-    challenge_types = {}
-    for idx, challenge in enumerate(challenges):
-        challenge_type = challenge.get("type", "Misc")
-        if challenge_type not in challenge_types:
-            challenge_types[challenge_type] = []
-        challenge_types[challenge_type].append((idx, challenge))
+    # Sort challenges by point value (difficulty)
+    sorted_challenges = sorted(enumerate(challenges), key=lambda x: x[1]['points'])
     
-    # Display challenges by type in respective tabs
-    for i, tab_name in enumerate(["Web", "Crypto", "Forensics", "Reversing", "Misc"]):
-        with tabs[i]:
-            if tab_name in challenge_types:
-                for idx, challenge in challenge_types[tab_name]:
-                    display_challenge_card(idx, challenge)
-            else:
-                st.info(f"No {tab_name} challenges available in this category.")
+    # Display challenge cards
+    for idx, challenge in sorted_challenges:
+        display_challenge_card(idx, challenge)
 
 def display_challenge_card(idx, challenge):
     """Display a single challenge card with submission form."""
     # Generate a unique key for this challenge
-    challenge_id = f"{challenge['title']}_{idx}"
+    challenge_id = f"{challenge['name']}_{idx}"
     
     # Check if challenge has been solved
     solved = challenge_id in st.session_state.solved_challenges
@@ -45,15 +35,16 @@ def display_challenge_card(idx, challenge):
     
     # Create the challenge card
     with st.expander(
-        f"{challenge['title']} ({challenge['points']} pts) " + ("✅" if solved else ""),
+        f"{challenge['name']} ({challenge['points']} pts) " + ("✅" if solved else ""),
         expanded=not solved
     ):
         st.markdown(f"**Description:** {challenge['description']}")
         
-        if 'hint' in challenge and not solved:
+        if 'hints' in challenge and not solved:
             # Use a collapsible container with button instead of nested expander
-            if st.button(f"Show Hint", key=f"hint_{challenge_id}"):
-                st.markdown(f"*{challenge['hint']}*")
+            if st.button(f"Show Hints", key=f"hint_{challenge_id}"):
+                for i, hint in enumerate(challenge['hints']):
+                    st.markdown(f"*Hint {i+1}: {hint}*")
         
         # Display any challenge-specific content
         if 'content' in challenge:
@@ -75,7 +66,7 @@ def display_challenge_card(idx, challenge):
                         
                         # Save the solved challenge to session state with timing information
                         st.session_state.solved_challenges[challenge_id] = {
-                            'title': challenge['title'],
+                            'name': challenge['name'],
                             'points': challenge['points'],
                             'time': time.time(),
                             'solving_time': solving_time,
